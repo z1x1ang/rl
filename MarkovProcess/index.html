@@ -53,8 +53,8 @@
             { id: 1, label: '本职工作',x: -200, y: -200, fixed: true },
             { id: 2, label: '人工智能工作' ,shape:'box',x:200, y: -200, fixed: true},
             { id: 3, label: '机器学习' ,x: -150, y: -50, fixed: true},
-            { id: 4, label: '强化学习' ,x: 50, y: -50, fixed: true},
-            { id: 5, label: '深度强化' ,x: 220, y: -50, fixed: true},
+            { id: 4, label: '强化学习' ,x: 40, y: -50, fixed: true},
+            { id: 5, label: '深度强化' ,x: 251, y: -50, fixed: true},
             { id: 6, label: '故宫旅游' ,x: 10, y: 100, fixed: true}
         ]);
         var edges = new vis.DataSet([
@@ -279,19 +279,24 @@ edges.forEach((edge)=>{
         if(edge.from==1 && edge.to==1) label = '继续本职工作R=0Q₁₁*=16';
         else if(edge.from==1 && edge.to==3) label = '学习R=10Q₁₂*=16';
         else if(edge.from==3 && edge.to==1) label = '放弃R=-10Q₃₁*=6';
-        else if(edge.from==4 && edge.to==1) label = '放弃R=-10Q₄₁*=6'
         else if(edge.from==4 && edge.to==5) label = '学习R=-2Q₄₃*=8';
-        else if(edge.from==5 && edge.to==6) label = '旅游R=1Q₅₂*=9.8';
         else if(edge.from==4 && edge.to==2) label = '找工作R=8Q₄₂*=8';
         else if(edge.from==5 && edge.to==2) label = '找工作R=10Q₅₁*=10';
-        else if(edge.from==3 && edge.to==2) label = '找工作R=4Q₃₂*=4';
         else if(edge.from==3 && edge.to==4) label = '学习R=-2Q₃₃*=6';
         if (label && label !== edge.label) {
         updates.push({id:edge.id,label:label,font:{size:10}})
         }
     }
 })
+edges.forEach((edge)=>{
+    if(edge.from==3 && edge.to==2) edges.remove(edge.id)
+    if(edge.from==4 && edge.to==1) edges.remove(edge.id)
+    if(edge.from==5 && edge.to==6) edges.remove(edge.id)
+
+})
+
 edges.update(updates);
+
 bellmanmaxDes.innerHTML=`<a href="https://flowus.cn/share/b722609e-8bfa-4d7f-9844-978c97573197">贝尔曼最优方程推导过程<br></a>`
 bellmanmaxDes.innerHTML+="假设已经求得最优值函数和最优行为值函数<br>\
 验证\\(V^*(s)\\)和\\(V^*(s')\\)关系公式<br>\
