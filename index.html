@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网格世界示例2</title>
+<link rel="stylesheet" type="text/css" href="index.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <p style="color: white;">已知条件:策略评估的阈值为threshold=0.00001,折扣因子是1,每走一步奖励-1,到达目的地结束。如果碰到墙壁保留在原位置,初始设定:每个格子
+    值函数为0,策略为随机策略(每种动作选择的概率0.25)</p>
+    <div class="grid-container">
+        <div id="cell0" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell1" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell2" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell3" class="grid-item">0<br>↑→↓←</div>  
+        <div id="cell4" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell5" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell6" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell7" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell8" class="grid-item" style="background-color: green;">0<br>目的地</div>
+        <div id="cell9" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell10" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell11" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell12" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell13" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell14" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell15" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell16" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell17" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell18" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell19" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell20" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell21" class="grid-item">0<br>↑→↓←</div> 
+        <div id="cell22" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell23" class="grid-item">0<br>↑→↓←</div>
+        <div id="cell24" class="grid-item">0<br>↑→↓←</div>  
+      </div>
+      <button id="evaluationButton">执行一次策略评估</button>
+      <button id="improveButton" disabled="true">执行一次策略改进</button>
+      <h4 style="color: white;margin-top: 0px;"></h4>
+      <p style="color: white;">值函数公式:\(V_{k+1}(s)=\sum_{a\in A}{\pi(a|s)(R^a_s+\gamma \sum_{s'\in S}P_{ss'}^aV_{k}(s'))}\)</p>
+      <p style="color: white;">最优策略公式:\({\pi}^*(a|s)=\\argmax_{a \in A}\left(R^a_s+\gamma \sum_{s' \in S}P^a_{ss'}V^*(s')\right)\)</p>
+      <a href="https://zhuanlan.zhihu.com/p/484469521" style="color: rgb(54, 15, 194);">压缩映射以及策略迭代和值迭代</a>
+      <script type="module" src="policyIteration.js"></script>
+    <script type="module">
+    import { statesV, statesP,i_num } from './policyIteration.js';
+    import {_i} from './policyEvaluation.js'
+    let i=0
+    function disableButton(buttonId){
+        document.getElementById(buttonId).disabled=true;
+    }
+    function enableButton(buttonId){
+        document.getElementById(buttonId).disabled=false;
+    }
+    document.getElementById("evaluationButton").addEventListener('click',function(){
+        disableButton('evaluationButton')
+        enableButton('improveButton')
+    if(i===i_num-1){alert("策略迭代已完成");disableButton('improveButton');return}
+    for(let j=0;j<25;j++){
+        if(j==8) continue
+        document.getElementById('cell'+j).textContent=Math.round(statesV[i][j]*Math.pow(10,8))/Math.pow(10,8)
+    }
+    i=i+1;
+    document.querySelector('h4').textContent="迭代计算了"+_i[i]+"次,结果收敛(指的是解当前策略下贝尔曼方程所使用的迭代次数 按F12查看详情)"
+  }
+  )
+  document.getElementById('improveButton').addEventListener('click',function(){
+    disableButton('improveButton')
+    enableButton('evaluationButton')
+    for(let j=0;j<25;j++){
+        let statesB=document.getElementById('cell'+j);
+        if(j==8) continue
+        statesB.innerHTML+='<br>'
+        for(let _j=0;_j<4;_j++){
+            if(statesP[i][j][_j]===1){
+                switch (_j) {
+                    case 0: statesB.innerHTML+='↑';
+                    break;
+                    case 1:statesB.innerHTML+='→';
+                    break;
+                    case 2:statesB.innerHTML+='↓';
+                    break;
+                    case 3:statesB.innerHTML+='←';
+                    default:
+                    break;
+                }
+            }
+        }
+    }
+})
+    </script>
+</body>
+</html>
