@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Reinforcement LearningM</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/css/reveal.min.css'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/css/theme/white.min.css'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/lib/css/zenburn.min.css'>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/plugin/markdown/markdown.js"></script>
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script> -->
+<link rel="stylesheet" type="text/css" href="style.css"></link>
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="reveal">
+	<!-- Any section element inside of this container is displayed as a slide -->
+	<div class="slides" >
+		<section>
+			<h2>Reinforcement Learning and Video Games</h2>
+			<h3>强化学习技术在游戏场景下的实践与应用</h3>
+			<p>
+				<small>Created by <a href="https://ar5iv.labs.arxiv.org/html/1909.04751">Yue Zheng</a> from <a
+						href="https://www.sheffield.ac.uk/">University of Sheffield</a></small>
+			</p>
+			<img src="img/runner.gif" >
+		</section>
+		<div style="display: flex; align-items: flex-start;">
+			<img src="img/logo1.png" width="43">
+			<img class="r-frame" src="img/logo2.png" width="51" style="margin-left: 0px;margin-top: -3px;">
+		</div>
+		<section>
+			<h2>概述</h2>
+			<p>
+				通过结合强化学习和深度学习的方法，智能体在游戏领域已经超越了人类专家的水平。这一点,通过DeepMind在围棋比赛中的获胜以及智能体在雅达利游戏中表现得到了证明。<span class="simple-highlight">深度学习技术解决了多年来一直阻碍强化学习发展的高维输入问题。</span><mark>在本研究中,我们结合了这两种技术,创建了几种不同算法的智能体,并让这些智能体学会了玩T-rex Runner游戏。</mark>我们实现了深度Q网络算法及其三种改进类型,以训练这些智能体。虽然其中一些结果并不尽如人意，但其他一些结果却优于人类玩家。此外,批量归一化是一种解决深度神经网络内部协变量偏移问题的方法，本研究也证明了它对强化学习的积极影响。
+			</p>
+		</section>
+		<section>
+			<h2>目录</h2>
+			<ol>
+				<li>项目目的及介绍</li>
+				<li>预备知识</li>
+				<li>实现方法</li>
+				<li>实验结果及讨论</li>
+				<li>结论及未来展望</li>
+			</ol>
+		</section>
+		<!-- Example of nested vertical slides -->
+		<section>
+			<section>
+				<h2>1.项目目的及介绍</h2>
+				<p></p>
+				<p>背景、目的、概述</p>
+				<br>
+				<a href="#" class="navigate-down">
+					<img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"
+						alt="Down arrow">
+				</a>
+			</section>
+			<section data-background="img/dinosaur.png" data-background-size="300px" data-background-position="bottom left">
+				<h2>游戏介绍</h2>
+				<p>T-rex Runner是一款来自Google Chrome离线模式的恐龙游戏。玩家的目标是躲避所有障碍并获得更高的分数,直到达到极限。</p>
+			</section>
+			<section>
+				<h2>项目目的</h2>
+				<p>该项目的目的是创建一个使用不同算法(<span class="simple-highlight">DQN,double DQN,DQN with prioritized experience replay,dueling DQN</span>)的智能体来玩T-rex Runner并比较它们的性能。
+					<ul>
+						<li>创建智能体来玩 T-rex Runner</li>
+						<li>比较不同强化学习算法之间的差异</li>
+						<li>研究<a>批量归一化</a>在强化学习中的作用</li>
+					</ul>
+				</p>
+			</section>
+
+
+			<!-- <section>
+				<h2>Basement Level 2</h2>
+				<p>That's it, time to go back up.</p>
+				<br>
+				<a href="#/2">
+					<img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Up arrow"
+						style="transform: rotate(180deg); -webkit-transform: rotate(180deg);">
+				</a>
+			</section> -->
+		</section>
+		<section>
+			<section>
+				<h2>2.T-rex runner所需知识</h2>
+				<p></p>
+				<p>深度学习、神经网络、激活函数、反向传播算法、卷积神经网络、批量归一化</p>
+				<p>强化学习、马尔可夫决策过程、贝尔曼方程、探索和利用、TDL时序差分学习、Deep Q网络</p>
+				<br>
+				<a href="#" class="navigate-down">
+					<img width="108" height="130" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"
+						alt="Down arrow">
+				</a>
+			</section>
+			<section>
+				<h2>深度学习</h2>
+				<p>深度学习是一类基于人工神经网络（ANN）的机器学习模型。近年来广泛应用的深度学习模型有两种。递归神经网络就是其中之一，它在自然语言处理中展示了它的强大功能。另一个在深度强化学习中起着重要作用的模型<span class="simple-highlight">称为卷积神经网络 （CNN）。它是应对计算机视觉问题（如物体检测和图像分类）最有效的模型之一。</span>CNN在本项目中主要用于从图像数据中提取特征。</p>
+			</section>
+			<section>
+				<h2>深度神经网络和激活函数</h2>
+				<p>神经网络或多层感知器由三个主要组件组成：输入层、隐藏层和输出层。一层中的每个单元称为神经元。输入数据被馈入输入层，通过隐藏层中的权重进行线性变换。最后，通过激活函数将结果赋予非线性能力，并馈送到输出层。</p>
+				<img width="650px" src="https://ar5iv.labs.arxiv.org/html/1909.04751/assets/figures/dnn.png">
+			</section>
+			<section>
+				<h2>批量规范化</h2>
+				<p>
+					随着神经网络深度的增加，训练时间变得更长。其原因之一是，在更新权重时，每层的输入分布会发生变化，这被称为内部协变量偏移（Internal Covariate Shift）。2015年，Ioffe提出了批量归一化（Batch Normalization，BN），使每层的分布更稳定，并实现了更短的训练时间 [15]。在每个神经元中，输入可以通过方程进行归一化。				</p>
+		</section>
+			<section>
+				<h2>强化学习</h2>
+				<p>强化学习(RL)是一类机器学习，旨在在做出决策时获得最大的奖励信号。强化学习的基本组成部分是智能体和环境。如图 2.7 所示，智能体将在每次操作后收到来自环境的反馈，包括观察和奖励。为了产生更好的政策，它将不断与环境互动，并逐步提高其决策能力，直到政策趋同。</p>
+				<img src="img/RL.PNG"  width="350px" alt="强化学习图">
+			</section>
+			<section>
+				<h2>马尔可夫决策过程</h2>
+				<p>马尔可夫属性:给定一个状态在时间在有限序列中.此序列具有马尔可夫性质，当且仅当\[P[S_{t+1}|S_t]=P[S_{t+1}|S_1,...S_t]\]马尔可夫决策过程(MDP)是一个具有马尔科夫属性、值和决策的随机过程。</p>
+				<p>状态转移概率\(P^a_{ss'}=P[S_{t+1}=s'|S_t=s,A_t=a]\)</p>
+				<p>奖励\(R^a_{s}=E[R_{t+1}|S_t=s,A_t=a]\)</p>
+				<p>策略\(\pi(a|s) = P(A_t=a|S_t=s)\)</p>
+			</section>
+			<section>
+				<h2>回报\(G_t\)</h2>
+				<p>\[G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \gamma^3 R_{t+4} + ... = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}\]</p>
+				<img src="img/MDP.PNG" alt="mdp.png">
+			</section>
+			<section>
+				<h2>值函数</h2>
+				<p>状态值函数\(V_{\pi}(s) = E_{\pi}[G_t | S_t = s]\)</p>
+				<p>动作值函数\(Q_{\pi}(s,a) = E_{\pi}[G_t | S_t = s, A_t = a]\)</p>
+			    <p>\[V_{\pi}(s)=\sum_{a \in A} {\pi}(a|s)Q_{\pi}(s,a)\]</p>
+			</section>
+			<section>
+				<h2>贝尔曼期望方程</h2>
+				<p>\(V_{\pi}(s)=E_{\pi}[R_{t+1}+\gamma V(S_{t+1})|S_t=s]\)</p>
+				<p>\(Q_{\pi}(s,a)=E_{\pi}[R_{t+1}+\gamma Q_{\pi}(S_{t+1},A_{t+1})|S_t=s,A_t=a]\)</p>
+				<a>公式证明</a>
+			</section>
+			<section>
+				<h2>最优函数</h2>
+				<p>\(V^*(s)=\max_{\pi}V_{\pi}(s)\) &nbsp;&nbsp; \(Q^*(s,a)=\max_{\pi}(s,a)\)</p>
+				<p>贝尔曼最优方程:\(V^*(s)=\max_aR_s^a+\gamma \sum_{s'\in S}P^a_{ss'}V^*(s')\)</p>
+				<p>最优动作:\(Q^*(s,a)=R^a_s+\gamma \sum_{s'\in S}P^a_{ss'}\max_{a'}Q^*(s',a')\) <a>[公式证明]</a></p>
+				<p>\[Q_{\pi}(s,a)=R^a_s+\gamma \sum_{s' \in S}P^a_{ss'} \sum_{a' \in A} {\pi}(a'|s')Q_{\pi}(a'|s')\]</p>
+				<p>\({\pi}^*(a|s) = 
+					\begin{cases} 
+					1 & a=argmax_{a \in A}Q^*(s,a) \\
+					0 & 其他 
+					\end{cases}\)
+				</p>
+			</section>
+			<section>
+				<h2>探索和利用<br>Exploitation vs Exploration</h2>
+				<p>如果智能体对环境有完整的了解，换句话说，转移概率\(P^a_{ss'}\)可以计算给定状态s和行动a, 可以通过迭代方法求解，并具有合适的\(\gamma\)
+					.但是，这种方法无法处理未知环境，因为必须收集大量信息才能进行估计\(P^a_{ss'}\)在收敛动作值函数之前。如果在环境被充分探索之前，功能趋于稳定，模型的性能将远远不能令人满意，特别是在高作用空间情况下。</p>
+				<p>
+					\({\pi}(a|s) = 
+					\begin{cases} 
+					\frac{\varepsilon}{m}+1-{\varepsilon} & a^*=argmax_{a \in A}Q(s,a) \\
+					\frac{\varepsilon}{m} & 其他 
+					\end{cases}\)
+				</p>
+			</section>
+			<section>
+				<h2>TDL时序差分</h2>
+				<p>蒙特卡罗方法是一种不需要知道环境的模型 (model) 的方法，也就是说，智能体不需要知道在每个状态 (state) 下采取每个动作后会转移到哪个状态，以及得到多少回报 (reward)。智能体只需要从实际或模拟的环境中采样数据，也就是一系列的状态、动作和回报，来估计价值函数 (value function)。</p>
+			</section>
+			<section>
+				<h2>TD时序差分</h2>
+				<p>初访法:\(V(s_1)=\frac{G_{12}+G_{2k}+...}{N(s_1)}\)</p>
+				<p>增量式更新:\(Q(s, a) \leftarrow Q(s, a) + \frac{1}{N} \left[ G - Q(s, a) \right]\) </p>
+			</section>
+			<section>
+				<h2>Sarsa与Q-learning</h2>
+				<p>Q 学习和 Sarsa 算法的区别在于:区别主要在于它们如何更新Q值:Q-Learning基于最优未来行动更新(即便这个行动并未实际采取 更激进),而Sarsa基于实际采取的下一个行动更新(反映了当前策略 更保守)。</p>
+				<img style="border:none" src="img/Sarsa.PNG" width="470px"><img style="border:none;margin-bottom:33px;" src="img/QLearning.PNG" width="470px">
+			</section>
+			<section>
+				<h2>Deep Q Network</h2>
+				<p>
+					Q学习是一种强大的算法,可以解决简单的强化问题。但是，它无法处理连续状态或连续动作。为了解决前一个问题，可以使用深度学习方法来逼近动作值函数。</p>
+				<img src="img/DeepQNetwork.PNG">
+				
+			</section>
+			<section>
+				<h2>DQN与Dueling DQN</h2>
+				<p>DQN和Dueling DQN的主要区别在于它们如何评估状态。DQN直接输出一个Q值,而Dueling DQN是将输出分为价值函数和动作函数,然后通过它们的和来表示Q值。</p>
+				<img src="img/DQN.PNG">
+			</section>
+         </section>
+		 	<section>
+			 	<section>
+			<h2>3.实现方法</h2>
+			<p>
+				<p>软硬件要求:OS:Windows 10|Programming language:Python 3.7.4|Framework:OpenCV, Pytorch, Numpy, Gym Browser:Chrome 76</p>
+				<p>CPU:Intel Core i5-8300H|RAM	16G|GPU	Nvidia GTX 1060 6G</p>
+			</p>
+			<a href="#" class="navigate-down">
+				<img width="108" height="130" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"
+						alt="Down arrow">
+				</a>
+			  </section>
+			<section>
+			<h2>T-rex Runner游戏介绍</h2>
+				<p>玩家的目标是控制恐龙，克服尽可能多的障碍。如果恐龙没有失败，游戏的当前分数将随着时间的推移而增加,分数逐渐增加。恐龙在每种状态下都有三个动作可供选择：什么都不做、跳跃或躲避。</p>
+			<img src="./img/runnerActions.PNG">  
+			</section>
+		
+			<section data-markdown>
+                <script type="text/template">
+					## 如何设计奖励函数?
+					- 如果一局游戏结束:那么返回的奖励为-1。
+					- 如果游戏没有结束:
+						- 如果智能体选择跳跃,那么返回的奖励为0。
+						- 如果智能体选择其他动作（例如，不做任何事情或者下蹲），那么返回的奖励为0.1。
+					
+					这种奖励设计的目的是鼓励智能体在不必要跳跃的情况下选择其他动作，因为这样可以获得更高的奖励（0.1比0大）。
+                </script>
+            </section>
+			
+			<section>
+			<h2>研究方法选型</h2>
+				<p>DQN,double DQN,DQN with prioritized experience replay,dueling DQN </p>
+				<a>介绍</a>
+			</section>
+			<section>
+			<h2>图像预处理</h2>
+				<img src="img/imgPreprocessing.PNG">
+			</section>
+			<section>
+				<h2>卷积神经网络架构</h2>
+					<img src="img/CNN.PNG">
+			</section>
+			<section>
+				<h2>Dueling DQN</h2>
+					<img src="img/DuelingDQN.PNG">
+			</section>
+			<section>
+				<h2>实验</h2>
+					<p>超参数调优</p>
+					<p>不同Deep Q网络算法的比较</p>
+					<p>批量归一化的影响</p>
+			</section>
+		</section>
+		    <section>
+				<section>
+			 <h2>4.结果与讨论</h2>
+			 <a href="#" class="navigate-down">
+				<img width="108" height="130" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"
+					alt="Down arrow">
+			 </a>
+			</section>
+			<section>
+				<h2>超参数调优</h2>
+				<img src="./img/bat.PNG">	
+			</section>
+			<section>
+				<h2>BatchSize</h2>
+				<p>epoch 时三条曲线的平均得分80无处不在800.在这三者中，最稳定的是批量大小128.</p>
+				<img src="img/batchSize.PNG">
+			</section>
+			<section>
+				<h2>其他参数</h2>
+				<p>探索步骤</p>
+				<p>\[\gamma\]</p>
+			</section>
+			<section>
+				<h2>训练结果</h2>
+				<p>DQN</p>
+				<img src="img/DQNchart.PNG">
+			</section>
+			<section>
+				<h2>训练结果</h2>
+				<p>DoubleDQN</p>
+				<img src="img/doubleDQNChart.PNG">
+			</section>
+			<section>
+				<h2>训练结果</h2>
+				<p>DQN with PRE</p>
+				<img src="img/DQNwithPRE.PNG">
+			</section>
+			<section>
+				<h2>批量归一化</h2>
+				<img src="img/comparsion.PNG">
+			</section>
+			<section>
+				<h2>进一步讨论</h2>
+				<img src="img/furtherDiscussion.PNG">
+			</section>
+			<section>
+				<h2>测试结果</h2>
+				<img src="img/conclusion.PNG">
+			</section>
+			<section>
+				<h2>测试结果</h2>
+				<img src="img/conclusion2.PNG">
+				<p>根据表4.5,无论算法如何，批量归一化都会提高模型的性能，甚至增加了 DQN 和 PER 的均值。然而，很难说BN在决斗DQN中的作用是积极的还是不积极的。从图 4.11 中可以看出，没有 BN 的那个具有更多的异常值，即使其均值较高，也会导致高方差。考虑对异常值数据不敏感的中位数，BN 的中位数更好，最低分数超过 200，这在其他算法中脱颖而出。由于分数 43 表示智能体第一次遇到障碍物，因此很容易推断出所有经过训练的模型除了与 BN 决斗 DQN 外，至少一次都无法跳过第一个仙人掌。但是决斗 DQN 没有完全训练，这可以从图 4.8 的训练结果中看出。这也是高方差的原因之一，正如我们在箱线图中看到的那样。受过决斗DQN训练的特工至少三次超过8000。</p>
+			</section>
+		</section>
+		<section>
+			<h2>结论和未来工作</h2>
+			<p>
+				该项目旨在创建一个由四种算法训练的智能体来玩霸王龙奔跑者，并研究批量归一化在强化学习中的影响。
+                前一个目标已经实现，但由于游戏环境问题而优先重播。但是，所有其他算法都已成功实现并取得了很好的效果，尤其是 DQN 和决斗 DQN。他们俩都可以取得比人类专家更好的结果。尽管训练阶段的平均得分不稳定，但批量归一化对本项目中的所有 DQN 算法都显示出相对积极的影响。
+                在进一步的研究中，应该首先重新开发游戏环境，以便在神经网络计算时添加暂停函数值或进行优化。之后可以测试优先体验重播。在本项目中，仅实现了基于比例的方法，因此将来也可以研究基于秩的优先级。可以开发进一步的算法组合，例如具有优先体验重放的决斗 DQN。还可以实施基于策略的算法（如 PPO）来训练代理。
+                有一个有趣的想法尚未实施。考虑到障碍物的移动速度逐渐增加，我们可以将游戏分为几个阶段。每个阶段都有一个神经网络，该神经网络由前一阶段初始化，并将独立训练。这个想法的直觉是，当智能体在不同阶段运行时，跳跃的结果会发生变化。这也可能是高方差的原因之一，因为当智能体在后期学会了如何获得更好的分数时，它会在早期阶段忘记最佳策略。
+            </p>
+		</section>
+
+	   <div class="slides">
+            <section data-markdown>
+                <script type="text/template">
+                    ## Hello, Markdown!
+
+                    This is a sample slide written in Markdown.
+
+                    - Point 1
+                    - Point 2
+                    - Point 3
+                </script>
+            </section>
+        </div>
+        
+		<section>
+			<section style="text-align: left;">
+				<h2>感谢老师及同学的聆听</h2>
+				<p>
+					- <a href="https://slides.com">Try the online editor</a> <br>
+					- <a href="https://github.com/hakimel/reveal.js">Source code &amp; documentation</a>
+				</p>
+			</section>
+			<section id="fragments">
+				<h2>致谢</h2>
+				<p>老师</p>
+				<p class="fragment">同学</p>
+				<p><span class="fragment ">的</span> <span class="fragment">聆听    </span> <span
+						class="fragment">slide.</span></p>
+
+				<aside class="notes">
+					This slide has fragments which are also stepped through in the notes window.
+				</aside>
+			</section>
+			<section>
+				<h2>Fragment Styles</h2>
+				<p>There's different types of fragments, like:</p>
+				<p class="fragment grow">grow</p>
+				<p class="fragment shrink">shrink</p>
+				<p class="fragment fade-out">fade-out</p>
+				<p>
+					<span style="display: inline-block;" class="fragment fade-right">fade-right, </span>
+					<span style="display: inline-block;" class="fragment fade-up">up, </span>
+					<span style="display: inline-block;" class="fragment fade-down">down, </span>
+					<span style="display: inline-block;" class="fragment fade-left">left</span>
+				</p>
+				<p class="fragment fade-in-then-out">fade-in-then-out</p>
+				<p class="fragment fade-in-then-semi-out">fade-in-then-semi-out</p>
+				<p>Highlight <span class="fragment highlight-red">red</span> <span class="fragment highlight-blue">blue</span> <span
+						class="fragment highlight-green">green</span></p>
+			</section>
+		</section>
+
+		<section id="transitions">
+			<h2>Transition Styles</h2>
+			<p>
+				You can select from different transitions, like: <br>
+				<a href="?transition=none#/transitions">None</a> -
+				<a href="?transition=fade#/transitions">Fade</a> -
+				<a href="?transition=slide#/transitions">Slide</a> -
+				<a href="?transition=convex#/transitions">Convex</a> -
+				<a href="?transition=concave#/transitions">Concave</a> -
+				<a href="?transition=zoom#/transitions">Zoom</a>
+			</p>
+		</section>
+
+		<section id="themes">
+			<h2>Themes</h2>
+			<p>
+				reveal.js comes with a few themes built in: <br>
+				<!-- Hacks to swap themes after the page has loaded. Not flexible and only intended for the reveal.js demo deck. -->
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/black.css'); return false;">Black
+					(default)</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/white.css'); return false;">White</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/league.css'); return false;">League</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/sky.css'); return false;">Sky</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/beige.css'); return false;">Beige</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/simple.css'); return false;">Simple</a>
+				<br>
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/serif.css'); return false;">Serif</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/blood.css'); return false;">Blood</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/night.css'); return false;">Night</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/moon.css'); return false;">Moon</a> -
+				<a href="#"
+					onclick="document.getElementById('theme').setAttribute('href','css/theme/solarized.css'); return false;">Solarized</a>
+			</p>
+		</section>
+
+		<section>
+			<section data-background="#dddddd">
+				<h2>Slide Backgrounds</h2>
+				<p>
+					Set <code>data-background="#dddddd"</code> on a slide to change the background color. All CSS color formats are
+					supported.
+				</p>
+				<a href="#" class="navigate-down">
+					<img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"
+						alt="Down arrow">
+				</a>
+			</section>
+			<section data-background="https://s3.amazonaws.com/hakim-static/reveal-js/image-placeholder.png">
+				<h2>Image Backgrounds</h2>
+				<pre><code class="hljs html">&lt;section data-background="image.png"&gt;</code></pre>
+			</section>
+			<section data-background="https://s3.amazonaws.com/hakim-static/reveal-js/image-placeholder.png"
+				data-background-repeat="repeat" data-background-size="100px">
+				<h2>Tiled Backgrounds</h2>
+				<pre><code class="hljs html" style="word-wrap: break-word;">&lt;section data-background="image.png" data-background-repeat="repeat" data-background-size="100px"&gt;</code></pre>
+			</section>
+			<section
+				data-background-video="https://s3.amazonaws.com/static.slid.es/site/homepage/v1/homepage-video-editor.mp4,https://s3.amazonaws.com/static.slid.es/site/homepage/v1/homepage-video-editor.webm"
+				data-background-color="#000000">
+				<div style="background-color: rgba(0, 0, 0, 0.9); color: #fff; padding: 20px;">
+					<h2>Video Backgrounds</h2>
+					<pre><code class="hljs html" style="word-wrap: break-word;">&lt;section data-background-video="video.mp4,video.webm"&gt;</code></pre>
+				</div>
+			</section>
+			<section data-background="http://i.giphy.com/90F8aUepslB84.gif">
+				<h2>... and GIFs!</h2>
+			</section>
+		</section>
+
+		<section data-transition="slide" data-background="#4d7e65" data-background-transition="zoom">
+			<h2>Background Transitions</h2>
+			<p>
+				Different background transitions are available via the backgroundTransition option. This one's called "zoom".
+			</p>
+			<pre><code class="hljs javascript">Reveal.configure({ backgroundTransition: 'zoom' })</code></pre>
+		</section>
+
+		<section data-transition="slide" data-background="#b5533c" data-background-transition="zoom">
+			<h2>Background Transitions</h2>
+			<p>
+				You can override background transitions per-slide.
+			</p>
+			<pre><code class="hljs html" style="word-wrap: break-word;">&lt;section data-background-transition="zoom"&gt;</code></pre>
+		</section>
+
+		<section data-background-iframe="https://hakim.se" data-background-interactive>
+			<div
+				style="position: absolute; width: 40%; right: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 5px 25px rgba(0,0,0,0.2); background-color: rgba(0, 0, 0, 0.9); color: #fff; padding: 20px; font-size: 20px; text-align: left;">
+				<h2>Iframe Backgrounds</h2>
+				<p>Since reveal.js runs on the web, you can easily embed other web content. Try interacting with the page in the
+					background.</p>
+			</div>
+		</section>
+
+		<section>
+			<h2>Pretty Code</h2>
+			<pre><code class="hljs" data-trim data-line-numbers="4,8-11">
+import React, { useState } from 'react';
+
+function Example() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;You clicked {count} times&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+        Click me
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+					</code></pre>
+			<p>Code syntax highlighting courtesy of <a
+					href="http://softwaremaniacs.org/soft/highlight/en/description/">highlight.js</a>.</p>
+		</section>
+
+		<section>
+			<h2>Marvelous List</h2>
+			<ul>
+				<li>No order here</li>
+				<li>Or here</li>
+				<li>Or here</li>
+				<li>Or here</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Fantastic Ordered List</h2>
+			<ol>
+				<li>One is smaller than...</li>
+				<li>Two is smaller than...</li>
+				<li>Three!</li>
+			</ol>
+		</section>
+
+		<section>
+			<h2>Tabular Tables</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Item</th>
+						<th>Value</th>
+						<th>Quantity</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Apples</td>
+						<td>$1</td>
+						<td>7</td>
+					</tr>
+					<tr>
+						<td>Lemonade</td>
+						<td>$2</td>
+						<td>18</td>
+					</tr>
+					<tr>
+						<td>Bread</td>
+						<td>$3</td>
+						<td>2</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section>
+			<h2>Clever Quotes</h2>
+			<p>
+				These guys come in two forms, inline: <q
+					cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">The nice
+					thing about standards is that there are so many to choose from</q> and block:
+			</p>
+			<blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
+				&ldquo;For years there has been a theory that millions of monkeys typing at random on millions of typewriters would
+				reproduce the entire works of Shakespeare. The Internet has proven this theory to be untrue.&rdquo;
+			</blockquote>
+		</section>
+
+		<section>
+			<h2>Intergalactic Interconnections</h2>
+			<p>
+				You can link between slides internally,
+				<a href="#/2/3">like this</a>.
+			</p>
+		</section>
+
+		<section>
+			<h2>Speaker View</h2>
+			<p>There's a <a href="https://github.com/hakimel/reveal.js#speaker-notes">speaker view</a>. It includes a timer,
+				preview of the upcoming slide as well as your speaker notes.</p>
+			<p>Press the <em>S</em> key to try it out.</p>
+
+			<aside class="notes">
+				Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker
+				notes window (hit 's' on your keyboard).
+			</aside>
+		</section>
+
+		<section>
+			<h2>Export to PDF</h2>
+			<p>Presentations can be <a href="https://github.com/hakimel/reveal.js#pdf-export">exported to PDF</a>, here's an
+				example:</p>
+			<iframe data-src="https://www.slideshare.net/slideshow/embed_code/42840540" width="445" height="355" frameborder="0"
+				marginwidth="0" marginheight="0" scrolling="no" style="border:3px solid #666; margin-bottom:5px; max-width: 100%;"
+				allowfullscreen> </iframe>
+		</section>
+
+		<section>
+			<h2>Global State</h2>
+			<p>
+				Set <code>data-state="something"</code> on a slide and <code>"something"</code>
+				will be added as a class to the document element when the slide is open. This lets you
+				apply broader style changes, like switching the page background.
+			</p>
+		</section>
+
+		<section data-state="customevent">
+			<h2>State Events</h2>
+			<p>
+				Additionally custom events can be triggered on a per slide basis by binding to the <code>data-state</code> name.
+			</p>
+			<pre><code class="javascript" data-trim contenteditable style="font-size: 18px;">
+Reveal.addEventListener( 'customevent', function() {
+	console.log( '"customevent" has fired' );
+} );
+					</code></pre>
+		</section>
+
+		<section>
+			<h2>Take a Moment</h2>
+			<p>
+				Press B or . on your keyboard to pause the presentation. This is helpful when you're on stage and want to take
+				distracting slides off the screen.
+			</p>
+		</section>
+
+		<section>
+			<h2>Much more</h2>
+			<ul>
+				<li>Right-to-left support</li>
+				<li><a href="https://github.com/hakimel/reveal.js#api">Extensive JavaScript API</a></li>
+				<li><a href="https://github.com/hakimel/reveal.js#auto-sliding">Auto-progression</a></li>
+				<li><a href="https://github.com/hakimel/reveal.js#parallax-background">Parallax backgrounds</a></li>
+				<li><a href="https://github.com/hakimel/reveal.js#keyboard-bindings">Custom keyboard bindings</a></li>
+			</ul>
+		</section>
+
+		<section style="text-align: left;">
+			<h1>THE END</h1>
+			<p>
+				- <a href="https://slides.com">Try the online editor</a> <br>
+				- <a href="https://github.com/hakimel/reveal.js">Source code &amp; documentation</a>
+			</p>
+		</section>
+	</div>
+</div>
+<!-- partial -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/js/reveal.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/lib/js/head.min.js'></script><script  src="./script.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/plugin/markdown/marked.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/plugin/markdown/markdown.min.js"></script>
+</body>
+</html>
